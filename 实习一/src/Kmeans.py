@@ -175,7 +175,9 @@ def Kmeans(point_list,center_point_list,count=10000):
     while is_center_change and is_lable_change and count:
         new_labels=updateLabes(point_list,center_point_list)
         new_center_point_list=updateCenter(point_list,new_labels,center_point_list)
+        # 判断条件1：标签是否改变
         is_lable_change=isLableChange(labels,new_labels)
+        #判断条件2：聚类中心是否改变
         is_center_change=isCenterChange(center_point_list,new_center_point_list)
         labels=new_labels
         center_point_list=new_center_point_list
@@ -208,7 +210,7 @@ if __name__=="__main__":
     # 使用相对路径请好好检查你的当前路径吧
     print(os.getcwd())
     point_list=getPointsCoordinates(r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习一\data\实验一\Test1.shp")
-    center_list=getCenterCoordinates(point_list,2)
+    center_list=getCenterCoordinates(point_list,5)
     lables=Kmeans(point_list,center_list)
     plotClusters(point_list,lables)
 
