@@ -1,1 +1,3 @@
 实习二/utils/poi-master
+*.lock
+temp/
