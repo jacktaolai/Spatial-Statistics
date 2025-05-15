@@ -210,7 +210,7 @@ def KFunction(point_list,start,end,step_size,study_area_shp_path=None,is_plot=Tr
         num_simulated_points=999:区域内模拟的点个数，默认999个
         n_simulations=99:模拟的次数，默认99次
     Returns:
-        函数返回:列表里包括：[r_list,k_list,bound_lower,bound_high]
+        函数返回:列表里包括：[r_list,k_list,theoretical_K_value,bound_lower,bound_high]
 
     """
     
@@ -221,6 +221,8 @@ def KFunction(point_list,start,end,step_size,study_area_shp_path=None,is_plot=Tr
     result=[] # 要返回的结果
     result.append(r_list)
     result.append(k_list)
+    theoretical_k = np.pi * np.array(r_list)**2  # K(r) = πr²
+    result.append(theoretical_k.tolist())
     if cal_confidence:# 如果要计算置信度
         simulated_k_list=[] #存储每一次模拟出来的k函数值
         for _ in tqdm(range(n_simulations),desc="模拟次数"):# 模拟次数
@@ -235,8 +237,6 @@ def KFunction(point_list,start,end,step_size,study_area_shp_path=None,is_plot=Tr
         bound_high= np.percentile(simulated_k_list, ci_higher, axis=0)
         result.append(bound_lower.tolist())
         result.append(bound_high.tolist())
-        theoretical_k = np.pi * np.array(r_list)**2  # K(r) = πr²
-        result.append(theoretical_k.tolist())
     if is_plot:
         plt.figure(figsize=(10, 6))
         
@@ -288,7 +288,104 @@ def KFunction(point_list,start,end,step_size,study_area_shp_path=None,is_plot=Tr
     print(f"已保存计算结果到{output_path}")
     return result
 
+def ArcgisLFunction(r_list,k_list,theoretical_K_value,bound_lower=None,bound_high=None,is_plot=True):
+    """
+    Arcgis里L(r)的计算方法
+    Args:
+        r_list:半径的列表,为KFunction返回result里的第0个结果
+        k_list:计算的搭配的k值，为KFunction返回result里返回的第1个结果
+        theoretical_K_value:理论k值即πr²，为KFunction返回result里返回的第2个结果
+        bound_lower=None:置信度下界，为KFunction返回result里返回的第3个结果
+        bound_high=None:置信度下界，为KFunction返回result里返回的第4个结果
+        is_plot:是否绘图
+    Returns:
+        L(r):计算方式为sqrt(k/π)
+    """
+     # 计算L(r)值
+    L_list=np.sqrt(np.array(k_list)/np.pi)
+    theoretical_L=np.sqrt(np.array(theoretical_K_value)/np.pi)
+    if is_plot:
+        plt.figure(figsize=(10, 6))
+        # 绘制观测L函数（黑色实线）
+        plt.plot(r_list,L_list, 
+                color='black', 
+                linewidth=2, 
+                label='Observed L-function')
+        if (bound_lower!=None)and(bound_high!=None):
+            # 转换置信区间到L尺度
+            bund_lower_L=np.sqrt(np.array(bound_lower)/np.pi)
+            bound_high_L=np.sqrt(np.array(bound_high)/np.pi)
+            
+            # 绘制置信区间（浅蓝色填充）
+            plt.fill_between(r_list, 
+                            bund_lower_L, 
+                            bound_high_L, 
+                            color='lightblue', 
+                            alpha=0.5, 
+                            label='Confidence Envelope')
+        
+        # 绘制理论随机分布
+        plt.plot(r_list,theoretical_L,
+                linestyle=':', 
+                color='green',
+                linewidth=1.5,
+                label='Theoretical L value')
+        
+        # 图例和标签
+        plt.xlabel('Distance(r)')
+        plt.ylabel('L(r)')
+        plt.title('ArcgisL-function')
+        plt.legend()
+        plt.grid(alpha=0.3)
+        plt.tight_layout()
+        plt.show()
     
+    return L_list,theoretical_L
+
+def LFunction(r_list,k_list,theoretical_K_value,bound_lower=None,bound_high=None,is_plot=True):
+    """
+    普通的L(r)的计算方法
+    Args:
+        r_list:半径的列表,为KFunction返回result里的第0个结果
+        k_list:计算的搭配的k值，为KFunction返回result里返回的第1个结果
+        theoretical_K_value:理论k值即πr²，为KFunction返回result里返回的第2个结果
+        bound_lower=None:置信度下界，为KFunction返回result里返回的第3个结果
+        bound_high=None:置信度下界，为KFunction返回result里返回的第4个结果
+        is_plot:是否绘图
+    Returns:
+        L(r):计算方式为sqrt(k/π)-r
+    """
+         # 计算L(r)值
+    L_list=np.sqrt(np.array(k_list)/np.pi)-np.array(r_list)
+    theoretical_L=np.sqrt(np.array(theoretical_K_value)/np.pi)-np.array(r_list)
+    if is_plot:
+        plt.figure(figsize=(10, 6))
+        # 绘制观测L函数（黑色实线）
+        plt.plot(r_list,L_list, 
+                color='black', 
+                linewidth=2, 
+                label='Observed L-function')
+        if (bound_lower!=None)and(bound_high!=None):
+            # 转换置信区间到L尺度
+            bund_lower_L=np.sqrt(np.array(bound_lower)/np.pi)-np.array(r_list)
+            bound_high_L=np.sqrt(np.array(bound_high)/np.pi)-np.array(r_list)
+            
+            # 绘制置信区间（浅蓝色填充）
+            plt.fill_between(r_list, 
+                            bund_lower_L, 
+                            bound_high_L, 
+                            color='lightblue', 
+                            alpha=0.5, 
+                            label='Confidence Envelope')
+        
+        # 图例和标签
+        plt.xlabel('Distance(r)')
+        plt.ylabel('L(r)')
+        plt.title('L(r)')
+        plt.legend()
+        plt.grid(alpha=0.3)
+        plt.tight_layout()
+        plt.show()
 
 import pandas as pd 
 
@@ -304,14 +401,17 @@ if __name__=="__main__":
         point_list=point_list,
         start=0, # 起始距离
         end=35000,  # 终止距离
-        step_size=300,  # 步长
+        step_size=500,  # 步长
         study_area_shp_path=study_area_shp_path,  # 研究区域SHP路径
         is_plot=True,    # 自动绘图
         output_path="temp/ripley_k_results_with_ci.csv",  # 结果保存路径
-        cal_confidence=True,   # 计算置信区间
+        cal_confidence=False,   # 计算置信区间
         ci_lower=2.5, # 置信区间下限2.5%
         ci_higher=97.5,  # 置信区间上限97.5%
         num_simulated_points=99,  # 每次模拟点数
         n_simulations=100  # 模拟次数
     )
+    # 计算和Arcgis同款的L函数
+    ArcgisLFunction(result[0],result[1],result[2],result[3],result[4],True)
+    LFunction(result[0],result[1],result[2],result[3],result[4],True)
 
