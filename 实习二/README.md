@@ -2,17 +2,23 @@
 
 ### K函数说明
 K函数（Ripley’K Function）可用于研究不同模式下空间尺度的点分布规律，计算方法是：
+
 $$
 \hat{K}(r) = \frac{|A|}{n(n-1)} \sum_{i=1}^{n} \sum_{j \neq i} I(d_{ij} \leq r) 
 $$
+
 为更直观展示，常使用L函数：
+
 $$
 L(r) = \sqrt{\frac{K(r)}{\pi}} - r
 $$
+
 但是Arcgis实际使用的是
+
 $$
 L(r) = \sqrt{\frac{K(r)}{\pi}}
 $$
+
 本项目实现了以上三种函数的计算以及可视化制图。
 
 ---
