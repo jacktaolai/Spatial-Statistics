@@ -62,20 +62,20 @@ pip install pyshp matplotlib numpy tqdm shapely
 ![](assets/arcgis的K函数计算结果.png)
 图1: Arcgis K函数计算结果</em></p>
 
-![](assets\arcgis_置信度.png)
+![](assets/arcgis_置信度.png)
 图2: Arcgis 置信区间分析</em></p>
     
- ![](assets\银行最远距离34000步长300L函数.png)
+ ![](assets/银行最远距离34000步长300L函数.png)
  图3: ArcgisLFunction计算结果
 
 >结论1：和arcgis的结果无明显差异，公式的正确性以及代码实施的准确性。此外，设置Arcgis的步数为100，Arcgis不加缓冲区大约需要3分钟，加入缓冲区为5小时。代码运行时间为1分钟，说明程序运算时间上的优越性。
 
 #### 不同步长的设置结果
 
-![](assets\武汉银行最大距离34000步长500.png)
+![](assets/武汉银行最大距离34000步长500.png)
 图4: 步长500m计算结果
 
-![](assets\银行rmax34000_stepsize1.png)
+![](assets/银行rmax34000_stepsize1.png)
 图5: 步长1m计算结果
 
 
@@ -83,18 +83,18 @@ pip install pyshp matplotlib numpy tqdm shapely
 
 #### 边界效应的影响
 
-![](assets\银行rmax34000_stepsize500.png)
+![](assets/银行rmax34000_stepsize500.png)
 图6: 加入95%的置信度
 
 >结论3：加上置信度功能，若加上理论值πr²的曲线可以发现，模拟出来的置信度还是比理论值略小的，这说明了没有边界纠正整体计算出来的值会较小
 
 
-![](assets\银行rmax34000_stepsize500_studyareaNone.png)
+![](assets/银行rmax34000_stepsize500_studyareaNone.png)
 图7：使用外接矩形计算K函数值与置信度
 
 >结论4：若不传入研究区域，程序功能也正常，能自动使用点的外接矩形就行计算，但该模式反而模拟值比理论值偏大（后续增加实验也发现有比其小的情况）,我的解释是理论值计算出来的是假想一个无限大平面上生成随机点，而我设置的函数随机点在为在矩形范围内，相当于所有随机点都在外接矩形外，而不是无限平面内
 
-![alt text](assets\武汉银行35000步长300L函数.png)
+![alt text](assets/武汉银行35000步长300L函数.png)
 图8 L函数的计算结果
 >结论5：从L函数小于0来看就可以看出为加边界借助功能会使得计算结果偏小，另外L函数总体大于0，说明在研究范围内，武汉银行的点分布模式为聚集模式，且在距离达到16000m的时候聚集程度最大
 
