@@ -236,8 +236,8 @@ def calNeighbor_mean(gdf_polygon,study_attribute):
         current_polygon=gdf_polygon.geometry.iloc[i]    # 取出第i个面
         neighbor_values=[]
         for j in range(len(gdf_polygon)):
-            if i!=j and current_polygon.intersects(gdf_polygon.geometry.iloc[i]):
-                neighbor_values.append(gdf[study_attribute].iloc[j])    #将邻居的研究属性加进去
+            if i!=j and current_polygon.intersects(gdf_polygon.geometry.iloc[j]):
+                neighbor_values.append(gdf_polygon[study_attribute].iloc[j])    #将邻居的研究属性加进去
                     # 计算邻域均值（如果有邻接面）
         if neighbor_values: # 如果有邻接面计算平均值
             neighbor_means[i] = np.mean(neighbor_values)
@@ -245,7 +245,7 @@ def calNeighbor_mean(gdf_polygon,study_attribute):
 
 
 # 全量的莫兰指数计算
-def localMoran(gdf_polygon,study_attribute,mode="inverseDistance",W=None,is_std=True,distance_threshold=None,n_simulations=99,p_threshold=0.05,
+def localMoran(gdf_polygon,study_attribute,mode="inverseDistance",W=None,is_std=True,distance_threshold=None,n_simulations=99,p_threshold=0.2,
 ignored_attributes=None,ignored_values=None,is_plot=True,gdf_background=None,saved_shp_path=None):
     """
     全参数量的莫兰指数计算，可生成制图，mode为权重的计算方法，有"contiguityEdgesOnly","contiguityEdgesOnly","fixedDistanceBand"(需传入距离阈值)三种方法可选
@@ -295,11 +295,12 @@ ignored_attributes=None,ignored_values=None,is_plot=True,gdf_background=None,sav
     # 计算局部莫兰指数
     local_mroan_Is,ids=calLocalMoran(new_gdf_polygon,W,study_attribute,gdf_id="gdf_id")
     
-    study_values=new_gdf_polygon[study_attribute].to_numpy() # 研究属性的具体值
+    study_values=new_gdf_polygon[study_attribute].to_numpy().copy() # 研究属性的具体值
+    study_values_copy=study_values.copy()
     sim_local_mroan_Is=[]
     for i in tqdm(range(n_simulations),desc="模拟过程:"):
-        np.random.shuffle(study_values) # 随机打乱数据进行蒙特卡洛实验
-        sim_mroan_I,_=calLocalMoran(new_gdf_polygon,W,study_attribute,study_values=study_values,gdf_id="gdf_id")
+        np.random.shuffle(study_values_copy) # 随机打乱数据进行蒙特卡洛实验
+        sim_mroan_I,_=calLocalMoran(new_gdf_polygon,W,study_attribute,study_values=study_values_copy,gdf_id="gdf_id")
         sim_local_mroan_Is.append(sim_mroan_I)
 
     sim_local_mroan_Is=np.array(sim_local_mroan_Is) # 转为np方便切片
@@ -413,6 +414,7 @@ if __name__=="__main__":
     # import os
     # print(os.getcwd())
     gdf=getPolygonFromShpFile(r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习三\data\China.shp")
+    print(gdf)
     gdf_background=getPolygonFromShpFile(r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习三\data\China_line.shp")
     W,ids=fixedDistanceBand(
         gdf_polygon=gdf,                            # 研究的面
@@ -425,12 +427,12 @@ if __name__=="__main__":
     localMoran(
         gdf_polygon=gdf,            # 研究的面
         study_attribute="受教育",   # 研究的属性名
-        mode="inverseDistance",     # 权重矩阵的计算模式
+        mode="contiguityEdgesOnly",     # 权重矩阵的计算模式"inverseDistance""contiguityEdgesOnly"
         distance_threshold=None,      # 距离阈值
         is_std=True,                  # 是否对权重矩阵标准化
         W=None,                       # 权重矩阵（不传入，函数内计算）
         ignored_attributes=["NAME"],                # 有忽略值的属性
-        n_simulations=9999,
+        n_simulations=999,
         ignored_values=[["香港","澳门","台湾"]] ,     # 具体的忽略值，一定要列表里套列表！
         gdf_background=gdf_background               # 背景元素，提供九段线等
         )
