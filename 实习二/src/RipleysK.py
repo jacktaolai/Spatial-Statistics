@@ -192,7 +192,7 @@ def randomPointsInPolygon(polygon: list, num_points: int):
     return points
 
 # K函数
-def KFunction(point_list,start,end,step_size,study_area_shp_path=None,is_plot=True,output_path="rioleysk.csv",cal_confidence=False,ci_lower=2.5,ci_higher=97.5,num_simulated_points=999,n_simulations=99):
+def KFunction(point_list,start,end,step_size,study_area_shp_path=None,is_plot=True,output_path="rioleysk.csv",cal_confidence=False,ci_lower=2.5,ci_higher=97.5,num_simulated_points=99,n_simulations=99):
     """
     完全的K函数计算方法，可保存csv结果
     Args:
@@ -207,8 +207,8 @@ def KFunction(point_list,start,end,step_size,study_area_shp_path=None,is_plot=Tr
         cal_confidence=False:是否计算置信区间，默认False，若开启可能会加长计算时间，若不开启，后面参数无效
         ci_lower=2.5:百分置信区间的低值，默认为2.5，使用numpy实现，传入数值应为小数的100倍，例如：2.5代表2.5%即0.025分位
         ci_higher=97.5:百分置信区间的高值，默认为9.75，使用numpy实现，传入数值应为小数的100倍，例如：9.75代表97.5%即0.975分位
-        num_simulated_points=999:区域内模拟的点个数，默认999个
-        n_simulations=99:模拟的次数，默认99次
+        num_simulated_points=999:区域内模拟的点个数，默认99个
+        n_simulations=99:模拟的次数，默认999次
     Returns:
         函数返回:列表里包括：[r_list,k_list,theoretical_K_value,bound_lower,bound_high]
 
@@ -405,7 +405,7 @@ if __name__=="__main__":
         study_area_shp_path=study_area_shp_path,  # 研究区域SHP路径
         is_plot=True,    # 自动绘图
         output_path="temp/ripley_k_results_with_ci.csv",  # 结果保存路径
-        cal_confidence=False,   # 计算置信区间
+        cal_confidence=True,   # 计算置信区间
         ci_lower=2.5, # 置信区间下限2.5%
         ci_higher=97.5,  # 置信区间上限97.5%
         num_simulated_points=99,  # 每次模拟点数
