@@ -6,7 +6,7 @@
 
 ### 🧭 功能说明
 
-* **getCenterCoordinates(point/_list, center/_num)**
+* **getCenterCoordinates(point_list, center_num)**
   初始化聚类中心点。若不希望弹出初始化的可视化窗口，请将该函数内的 `plt.show()` 注释或删除。
 
 * **getPointsCoordinates(path)**
