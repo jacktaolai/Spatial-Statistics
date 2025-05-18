@@ -13,7 +13,7 @@ $x_i$：目标单元 $i$ 的属性值。
 
 $\bar{x}$：所有单元属性的均值。
 
-$S^2$：属性值的方差变种计算公式（$S^2 = \frac{\sum_{j=1,j \ne i}^{n}(x_j - \bar{x})^2}{n-1}$）。
+$S^2$：属性值的方差变种计算公式（ $S^2 = \frac{\sum_{j=1,j \ne i}^{n}(x_j - \bar{x})^2}{n-1}$ ）。
 
 $w_{ij}$：空间权重矩阵（如邻接矩阵、距离衰减权重等）。
 
@@ -57,8 +57,8 @@ $$
 
 其中：
 
-$\mu_{sim} = \text{Mean}(\text{sim}_i)$（模拟值的均值）
-$\sigma_{sim} = \text{Std}(\text{sim}_i)$（模拟值的标准差，使用无偏估计）
+$\mu_{sim} = \text{Mean}(\text{sim}_i)$ ，为模拟值的均值
+$\sigma_{sim} = \text{Std}(\text{sim}_i)$ ，为模拟值的标准差，使用无偏估计
 
 
 >虽然本项目想极力复原Arcgis的计算过程，但是经过测试p值和z得分的计算相比于Arcgis会更趋向于离散情况
