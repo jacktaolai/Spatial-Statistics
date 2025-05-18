@@ -3,16 +3,20 @@
 ### 局部莫兰指数计算
 局部莫兰指数 $I_i$ 的计算公式为：
 
-$
+$$
 I_i = \frac{(x_i - \bar{x})}{S^2} \cdot \left( \sum_{j=1,j \ne i}^{n} w_{ij}(x_j - \bar{x}) \right)
-$
+$$
 
 其中：
 
 $x_i$：目标单元 $i$ 的属性值。
+
 $\bar{x}$：所有单元属性的均值。
+
 $S^2$：属性值的方差变种计算公式（$S^2 = \frac{\sum_{j=1,j \ne i}^{n}(x_j - \bar{x})^2}{n-1}$）。
+
 $w_{ij}$：空间权重矩阵（如邻接矩阵、距离衰减权重等）。
+
 $n$：总单元数。
 
 ---
@@ -37,18 +41,20 @@ p值和z得分的计算基于随机排列的模拟过程，具体来说，将所
 
 $$
   p_i = \frac{ \text{Number of } I_{sim,k} \geq I_i }{ m }
-  $$
+$$
 
 若 $I_i < 0$（负自相关）：
 
 $$
   p_i = \frac{ \text{Number of } I_{sim,k} \leq I_i }{ m }
-  $$
+$$
 
 z 得分（标准化偏差）
+
 $$
 z_i = \frac{ I_{sim} - \mu_{sim} }{ \sigma_{sim} }
 $$
+
 其中：
 
 $\mu_{sim} = \text{Mean}(\text{sim}_i)$（模拟值的均值）
