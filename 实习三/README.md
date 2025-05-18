@@ -41,5 +41,7 @@ $\sigma_i = \text{Std}(\text{sim}_i)$（模拟值的标准差，通常使用 样
 ![alt text](assets/边邻接法莫兰指数对比.png)
 说明算法的准确性，但是其它算法插件较大，说明算法选择的差异性
 
+p,z值的计算还是不准
 
+![alt text](image.png)
 2. Python 代码实现判别逻辑

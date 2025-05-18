@@ -245,7 +245,7 @@ def calNeighbor_mean(gdf_polygon,study_attribute):
 
 
 # 全量的莫兰指数计算
-def localMoran(gdf_polygon,study_attribute,mode="inverseDistance",W=None,is_std=True,distance_threshold=None,n_simulations=99,p_threshold=0.2,
+def localMoran(gdf_polygon,study_attribute,mode="inverseDistance",W=None,is_std=True,distance_threshold=None,n_simulations=99,p_threshold=0.3,
 ignored_attributes=None,ignored_values=None,is_plot=True,gdf_background=None,saved_shp_path=None):
     """
     全参数量的莫兰指数计算，可生成制图，mode为权重的计算方法，有"contiguityEdgesOnly","contiguityEdgesOnly","fixedDistanceBand"(需传入距离阈值)三种方法可选
@@ -257,8 +257,7 @@ ignored_attributes=None,ignored_values=None,is_plot=True,gdf_background=None,sav
         W:权重矩阵，若传入权重矩阵，优先使用权重矩阵（不建议使用，除非你明确知道权重和研究的属性顺序是一一对应的）
         is_std=True:若使用模式计算权重矩阵，对权重矩阵是否标准化
         n_simulations=99:模拟的次数，默认999次
-        p_threshold=0.05:置信度阈值，小于该值才会被判断为异常，默认值为经典值，不建议调整
-        ci_higher=97.5:百分置信区间的高值，默认为9.75，使用numpy实现，传入数值应为小数的100倍，例如：9.75代表97.5%即0.975分位
+        p_threshold=0.05:置信度阈值，小于该值才会被判断为异常，建议调整
         is_plot=True:是否绘制地图
         gdf_background=None:若开启绘制地图，还可以传入底图（例如中国地图你还可以传入九段线）
         ignored_attributes=None:和ignored_values配合使用，用于忽略缺失值，为具有缺失值的属性名，可为列表，例如["name","GDP"]
@@ -357,6 +356,11 @@ ignored_attributes=None,ignored_values=None,is_plot=True,gdf_background=None,sav
         on="gdf_id",
         how="left"
     )
+    gdf_polygon['plot_pattern'] = gdf_polygon['pattern'].fillna('No Data')
+
+    # 保存shp文件
+    if saved_shp_path is not None:
+        gdf_polygon.to_file(saved_shp_path,encoding="utf-8")
 
     # 绘图
     if is_plot:
@@ -369,36 +373,37 @@ ignored_attributes=None,ignored_values=None,is_plot=True,gdf_background=None,sav
             'pink',       # HL (High-Low outlier)
             'lightblue',  # LH (Low-High outlier)
             'lightgrey',  # Not significant
-            'grey'        # Missing (NaN)
+            'grey'        # No Data
         ])
-        # Replace NaN with "Missing" for plotting
-        gdf_polygon['plot_pattern'] = gdf_polygon['pattern'].fillna('Missing')
-        # Plot with/without background map
+
         fig, ax = plt.subplots(figsize=(12, 8))
+        # 加载数据（确保是线状数据）
+        gdf_background = getPolygonFromShpFile(r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习三\data\China_line.shp")
+        print(gdf_background.geometry.type)  # 确认是否为 LineString/MultiLineString
+        # 定义颜色映射（LISA分类）
+        cmap = ListedColormap(['red', 'blue', 'pink', 'lightblue', 'lightgrey', 'grey'])
+        # 绘图
+        if is_plot:
+            # 1. 先绘制线状底图（黑色边界线）
+            gdf_background.plot(
+                ax=ax,
+                edgecolor='black',  # 线颜色
+                linewidth=0.5,      # 线宽
+                facecolor='none'    # 无填充
+            )
+            # 2. 再绘制主图（LISA分类）
+            gdf_polygon.plot(
+                ax=ax,
+                column='plot_pattern',
+                categorical=True,
+                cmap=cmap,
+                legend=True,
+                legend_kwds={'title': 'LISA Clusters', 'loc': 'lower left'},
+                alpha=0.7  # 半透明，避免完全遮盖底图
+            )
+            plt.title('Local Moran\'s I (LISA) Cluster Map')
+            plt.show()
         
-        if gdf_background is not None:
-            gdf_background.plot(ax=ax, color='white', edgecolor='black')
-        
-        gdf_polygon.plot(
-            ax=ax,
-            column='plot_pattern',
-            categorical=True,
-            cmap=cmap,
-            legend=True,
-            legend_kwds={
-                'title': 'LISA Clusters',
-                'loc': 'lower right'
-            }
-        )
-        plt.title('Local Moran\'s I (LISA) Cluster Map')
-        plt.show()        
-
-
-
-
-
-                          
-
 
 
 if __name__=="__main__":
@@ -416,31 +421,22 @@ if __name__=="__main__":
     gdf=getPolygonFromShpFile(r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习三\data\China.shp")
     print(gdf)
     gdf_background=getPolygonFromShpFile(r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习三\data\China_line.shp")
-    W,ids=fixedDistanceBand(
-        gdf_polygon=gdf,                            # 研究的面
-        distance_threshold=500000,
-        is_std=True,                                # 是否标准化
-        gdf_id="NAME",                              # 标识每一面的属性名称        
-        ignored_attributes=["NAME"],                # 有忽略值的属性
-        ignored_values=[["香港","澳门","台湾"]] ,     # 具体的忽略值，一定要列表里套列表！
-    )
+    saved_shp_path=r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\temp\inverse_分析.shp"     
+
+    
+    print(gdf_background)
     localMoran(
         gdf_polygon=gdf,            # 研究的面
         study_attribute="受教育",   # 研究的属性名
-        mode="contiguityEdgesOnly",     # 权重矩阵的计算模式"inverseDistance""contiguityEdgesOnly"
-        distance_threshold=None,      # 距离阈值
+        mode="fixedDistanceBand",     # 权重矩阵的计算模式"inverseDistance""contiguityEdgesOnly""fixedDistanceBand"
+        distance_threshold=1000000,      # 距离阈值
         is_std=True,                  # 是否对权重矩阵标准化
         W=None,                       # 权重矩阵（不传入，函数内计算）
         ignored_attributes=["NAME"],                # 有忽略值的属性
-        n_simulations=999,
+        p_threshold=0.05,                            # p阈值（建议填大一点）
+        n_simulations=999,                          # 模拟的次数
+        saved_shp_path=saved_shp_path,               # 分析结果shpfile保存地址，不需要该功能填None
         ignored_values=[["香港","澳门","台湾"]] ,     # 具体的忽略值，一定要列表里套列表！
         gdf_background=gdf_background               # 背景元素，提供九段线等
         )
     
-    # print(list(gdf))
-
-    # # 提取 Shapely Polygon
-
-
-    # print("空间权重矩阵（标准化后）:")
-    # print(W_std)
