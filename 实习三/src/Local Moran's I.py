@@ -336,7 +336,7 @@ ignored_attributes=None,ignored_values=None,is_plot=True,gdf_background=None,sav
             else:
                 if study_values[i]>neighbor_means[i]:
                     pattern_labels.append('HL')
-                elif study_values[i]<study_values[i]:
+                elif study_values[i]<neighbor_means[i]:
                     pattern_labels.append('LH')
                 else:
                     pattern_labels.append("Not significant")
@@ -398,11 +398,13 @@ ignored_attributes=None,ignored_values=None,is_plot=True,gdf_background=None,sav
                 categorical=True,
                 cmap=cmap,
                 legend=True,
-                legend_kwds={'title': 'LISA Clusters', 'loc': 'lower left'},
+                legend_kwds={'title': 'Clusters Outliers', 'loc': 'lower left'},
                 alpha=0.7  # 半透明，避免完全遮盖底图
             )
-            plt.title('Local Moran\'s I (LISA) Cluster Map')
+            plt.title('Local Moran\'s Clusters Outliers Map')
             plt.show()
+
+    return new_gdf_polygon
         
 
 
@@ -421,22 +423,23 @@ if __name__=="__main__":
     gdf=getPolygonFromShpFile(r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习三\data\China.shp")
     print(gdf)
     gdf_background=getPolygonFromShpFile(r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习三\data\China_line.shp")
-    saved_shp_path=r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\temp\inverse_分析.shp"     
+    #saved_shp_path=r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\temp\实习三\result\inverseDistance_stdrow_python_p3.shp"  
+    saved_shp_path=None   
 
     
     print(gdf_background)
     localMoran(
         gdf_polygon=gdf,            # 研究的面
         study_attribute="受教育",   # 研究的属性名
-        mode="fixedDistanceBand",     # 权重矩阵的计算模式"inverseDistance""contiguityEdgesOnly""fixedDistanceBand"
+        mode="inverseDistance",     # 权重矩阵的计算模式"inverseDistance""contiguityEdgesOnly""fixedDistanceBand"
         distance_threshold=1000000,      # 距离阈值
         is_std=True,                  # 是否对权重矩阵标准化
         W=None,                       # 权重矩阵（不传入，函数内计算）
-        ignored_attributes=["NAME"],                # 有忽略值的属性
-        p_threshold=0.05,                            # p阈值（建议填大一点）
+        p_threshold=0.25,                            # p阈值（建议填大一点）
         n_simulations=999,                          # 模拟的次数
         saved_shp_path=saved_shp_path,               # 分析结果shpfile保存地址，不需要该功能填None
+        ignored_attributes=["NAME"],                # 有忽略值的属性
         ignored_values=[["香港","澳门","台湾"]] ,     # 具体的忽略值，一定要列表里套列表！
-        gdf_background=gdf_background               # 背景元素，提供九段线等
+        gdf_background=gdf_background               # 背景元素，提供十段线等，没有就填None
         )
     
