@@ -4,6 +4,9 @@ from shapely.geometry import Polygon
 import pandas as pd
 from tqdm import tqdm 
 import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+
 def getPolygonFromShpFile(path,csv_path=None,shp_on=None,csv_on=None):
     """
     将只包含面的shapfile文件转为Polygon列表，代码不检查文件中是否为纯多边形，请只传入纯多边形shapefile
@@ -116,7 +119,10 @@ def inverseDistance(gdf_polygon,is_std=True,gdf_id=None,ignored_attributes=None,
     print("提取面的中心...")
     centroids=gdf_polygon.geometry.centroid # 提取每个面元素的中心点
 
-    ids=gdf_polygon[gdf_id].tolist()    #每个面元素的唯一标识符
+    if gdf_id is None:
+        ids=None
+    else: 
+        ids=gdf_polygon[gdf_id].tolist()    #每个面元素的唯一标识符
 
     # 权重矩阵的核心计算代码
     n=len(centroids)
@@ -364,45 +370,30 @@ ignored_attributes=None,ignored_values=None,is_plot=True,gdf_background=None,sav
 
     # 绘图
     if is_plot:
-        import matplotlib.pyplot as plt
-        from matplotlib.colors import ListedColormap
-        # Define color mapping
-        cmap = ListedColormap([
-            'red',        # HH (Hot spot)
-            'blue',       # LL (Cold spot)
-            'pink',       # HL (High-Low outlier)
-            'lightblue',  # LH (Low-High outlier)
-            'lightgrey',  # Not significant
-            'grey'        # No Data
-        ])
 
         fig, ax = plt.subplots(figsize=(12, 8))
         # 加载数据（确保是线状数据）
-        gdf_background = getPolygonFromShpFile(r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习三\data\China_line.shp")
-        print(gdf_background.geometry.type)  # 确认是否为 LineString/MultiLineString
         # 定义颜色映射（LISA分类）
         cmap = ListedColormap(['red', 'blue', 'pink', 'lightblue', 'lightgrey', 'grey'])
-        # 绘图
-        if is_plot:
-            # 1. 先绘制线状底图（黑色边界线）
-            gdf_background.plot(
-                ax=ax,
-                edgecolor='black',  # 线颜色
-                linewidth=0.5,      # 线宽
-                facecolor='none'    # 无填充
-            )
-            # 2. 再绘制主图（LISA分类）
-            gdf_polygon.plot(
-                ax=ax,
-                column='plot_pattern',
-                categorical=True,
-                cmap=cmap,
-                legend=True,
-                legend_kwds={'title': 'Clusters Outliers', 'loc': 'lower left'},
-                alpha=0.7  # 半透明，避免完全遮盖底图
-            )
-            plt.title('Local Moran\'s Clusters Outliers Map')
-            plt.show()
+        # 1. 先绘制线状底图（黑色边界线）
+        gdf_background.plot(
+            ax=ax,
+            edgecolor='black',  # 线颜色
+            linewidth=0.5,      # 线宽
+            facecolor='none'    # 无填充
+        )
+        # 2. 再绘制主图（LISA分类）
+        gdf_polygon.plot(
+            ax=ax,
+            column='plot_pattern',
+            categorical=True,
+            cmap=cmap,
+            legend=True,
+            legend_kwds={'title': 'Clusters Outliers', 'loc': 'lower left'},
+            alpha=0.7  # 半透明，避免完全遮盖底图
+        )
+        plt.title('Local Moran\'s Clusters Outliers Map')
+        plt.show()
 
     return new_gdf_polygon
         
@@ -435,7 +426,7 @@ if __name__=="__main__":
         distance_threshold=1000000,      # 距离阈值
         is_std=True,                  # 是否对权重矩阵标准化
         W=None,                       # 权重矩阵（不传入，函数内计算）
-        p_threshold=0.25,                            # p阈值（建议填大一点）
+        p_threshold=0.1,                            # p阈值（建议填大一点）
         n_simulations=999,                          # 模拟的次数
         saved_shp_path=saved_shp_path,               # 分析结果shpfile保存地址，不需要该功能填None
         ignored_attributes=["NAME"],                # 有忽略值的属性

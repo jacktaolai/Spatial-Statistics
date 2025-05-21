@@ -262,6 +262,7 @@ $$
 其中：
 
 $\mu_{sim} = \text{Mean}(\text{sim}_i)$ ，为模拟值的均值
+
 $\sigma_{sim} = \text{Std}(\text{sim}_i)$ ，为模拟值的标准差，使用无偏估计
 
 
