@@ -4,6 +4,12 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import math
 import numpy as np
+from scipy.stats import norm  # 用于计算 p 值
+import matplotlib.colors as mcolors
+import pandas as pd
+
+
+
 
 # 生成格网并统计每个格网里的点
 def generateGridAndCountPoints(refrence_gdf_points,x_num=None,y_num=None,x_interval=None,y_interval=None,is_plot=False,saved_shp_path=None):
@@ -311,30 +317,86 @@ def GStarLocal(gdf_polygons,study_attribute,mode="inverseDistance",W=None,is_std
     mean_study_values=np.mean(study_values)
     n=len(study_values)
     s=np.sqrt(np.sum(study_values**2)/n-mean_study_values**2)   # s不可直接使用std，不是标准的标准差
-    gdf_polygons["g_stars"]=0
+    gdf_polygons["g_stars"]=0.0
+    gdf_polygons["p_value"] = 0.0  # 新增 p 值列
+    gdf_polygons["GiBin"] = "Not Significant"
     for i in tqdm(range(len(study_values)),desc="计算G指数"):
         g_numerator=np.sum(W[i,:]*study_values)-mean_study_values*np.sum(W[i,:]) # 分子
         g_denominator=s*np.sqrt((n*np.sum(W[i,:]**2)-(np.sum(W[i,:]))**2)/(n-1)) #分母
-        g=g_numerator/g_denominator
-        gdf_polygons.at[i,"g_stars"]=g # 将g值写入面属性
+        g_star=g_numerator/g_denominator
+        gdf_polygons.at[i,"g_stars"]=g_star # 将g值写入面属性
+        # 计算 p 值（双侧检验）
+        p_value = 2 * (1 - norm.cdf(abs(g_star)))  # 标准正态分布
+        gdf_polygons.at[i, "p_value"] = p_value
+        # 分类逻辑（基于 z 分数）
+        if p_value <= 2.58:
+            category = "HotSpot-99%Confidence"
+        elif g_star >= 1.96:
+            category = "HotSpot-95%Confidence"
+        elif g_star >= 1.65:
+            category = "HotSpot-90%Confidence"
+        elif g_star <= -2.58:
+            category = "Cold Spot-99%Confidence"
+        elif g_star <= -1.96:
+            category = "Cold Spot-95%Confidence"
+        elif g_star <= -1.65:
+            category = "Cold Spot-90% Confidence"
+        else:
+            category = "Not Significant"
+
+        gdf_polygons.at[i, "GiBin"] = category
+
     
     if saved_shp_path is not None:
-        saved_shp_path.to_file(saved_shp_path,encoding="utf-8")
+        gdf_polygons.to_file(saved_shp_path,encoding="utf-8")
 
     if is_plot:
-        fig,ax=plt.subplots(figsize=(10,8))
+        #fig,ax=plt.subplots(figsize=(10,8))
 
-        # 按G*值赋颜色
+        # # 按G*值赋颜色
+        # gdf_polygons.plot(
+        #     column="p_value",   # G*所在列
+        #     cmap="coolwarm",     # 红=热点，蓝=冷点
+        #     ax=ax,
+        #     edgecolor="gray",
+        #     linewidth=0.5,
+        #     legend=True
+
+        # )
+        # ax.set_title("Getis-Ord Gi* Hotspot Analysis")
+        # plt.axis("off")
+        # plt.show()
+        # 设置类别及对应颜色
+        category_colors = {
+            "Cold Spot-99%Confidence": "#08306b",
+            "Cold Spot-95%Confidence": "#2171b5",
+            "Cold Spot-90% Confidence": "#6baed6",
+            "Not Significant": "#f0f0f0",
+            "HotSpot-90%Confidence": "#fcae91",
+            "HotSpot-95%Confidence": "#fb6a4a",
+            "HotSpot-99%Confidence": "#cb181d"
+        }
+
+        # 确保 GiBin 是分类型，便于保持图例顺序
+        gdf_polygons["GiBin"] = pd.Categorical(
+            gdf_polygons["GiBin"],
+            categories=list(category_colors.keys()),
+            ordered=True
+        )
+
+        # 画图
+        fig, ax = plt.subplots(figsize=(12, 8))
         gdf_polygons.plot(
-            column="g_stars",   # G*所在列
-            cmap="coolwarm",     # 红=热点，蓝=冷点
+            column="GiBin",
             ax=ax,
+            cmap=mcolors.ListedColormap([category_colors[k] for k in gdf_polygons["GiBin"].cat.categories]),
             edgecolor="gray",
             linewidth=0.5,
-            legend=True
+            legend=True,
+            legend_kwds={'title': 'grid type', 'loc': 'lower right'},
 
         )
-        ax.set_title("Getis-Ord Gi* Hotspot Analysis")
+        ax.set_title("Getis-Ord Gi* Hotspot Analysis (Categorical)", fontsize=14)
         plt.axis("off")
         plt.show()
 
@@ -349,7 +411,7 @@ def GStarLocal(gdf_polygons,study_attribute,mode="inverseDistance",W=None,is_std
 if __name__=="__main__":
     points_file_path=r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习四\data\Test4.shp"
     saved_shp_path=None
-    #saved_shp_path=r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\temp\实习四\result\grid10_10.shp"
+    saved_shp_path=r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\temp\实习四\result\grid1000m.shp"
     points=gpd.read_file(points_file_path)
     points.boundary
     print("投影为：",points.crs) # EPSG:4547对应的是CSGS114E
@@ -359,10 +421,10 @@ if __name__=="__main__":
     print(pos)
 
     grid=generateGridAndCountPoints(refrence_gdf_points=points,
-               x_num=20,
-               y_num=20,
-               # x_interval=3000,
-               # y_interval=3000,
+               # x_num=40,
+               # y_num=40,
+               x_interval=500,
+               y_interval=500,
                is_plot=True,
                saved_shp_path=saved_shp_path
         )
@@ -371,10 +433,11 @@ if __name__=="__main__":
     grid=GStarLocal(
         gdf_polygons=grid,                  # 要分析的面
         study_attribute="num_pts",          # 要研究的属性，使用本项目生成的格网填"num_pts"
-        mode="inverseDistance",             # 空间权重矩阵的计算方式
-        distance_threshold=None,             # 若使用fixedDistanceBand需要填这个
+        mode="contiguityEdgesOnly",             # 空间权重矩阵的计算方式"contiguityEdgesOnly""inverseDistance"
+        distance_threshold=3000,             # 若使用fixedDistanceBand需要填这个
         is_plot=True,                       # 是否绘图
-        saved_shp_path=saved_shp_path       # 分析结果的保存地址  
+        saved_shp_path=None,#saved_shp_path,       # 分析结果的保存地址  
+        is_std=False                       # 改变这个不影响结果
 
     )
 
