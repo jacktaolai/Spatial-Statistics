@@ -401,7 +401,7 @@ if __name__=="__main__":
         point_list=point_list,
         start=0, # 起始距离
         end=35000,  # 终止距离
-        step_size=500,  # 步长
+        step_size=700,  # 步长
         study_area_shp_path=study_area_shp_path,  # 研究区域SHP路径
         is_plot=True,    # 自动绘图
         output_path="temp/ripley_k_results_with_ci.csv",  # 结果保存路径

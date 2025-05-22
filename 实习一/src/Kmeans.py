@@ -210,7 +210,7 @@ if __name__=="__main__":
     # 使用相对路径请好好检查你的当前路径吧
     print(os.getcwd())
     point_list=getPointsCoordinates(r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习一\data\实验一\Test1.shp")
-    center_list=getCenterCoordinates(point_list,5)
+    center_list=getCenterCoordinates(point_list,3)
     lables=Kmeans(point_list,center_list)
     plotClusters(point_list,lables)
 

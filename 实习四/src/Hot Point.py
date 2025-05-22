@@ -328,8 +328,8 @@ def GStarLocal(gdf_polygons,study_attribute,mode="inverseDistance",W=None,is_std
         # 计算 p 值（双侧检验）
         p_value = 2 * (1 - norm.cdf(abs(g_star)))  # 标准正态分布
         gdf_polygons.at[i, "p_value"] = p_value
-        # 分类逻辑（基于 z 分数）
-        if p_value <= 2.58:
+            # 分类逻辑（基于 z 分数）
+        if g_star >= 2.58:
             category = "HotSpot-99%Confidence"
         elif g_star >= 1.96:
             category = "HotSpot-95%Confidence"
@@ -411,7 +411,7 @@ def GStarLocal(gdf_polygons,study_attribute,mode="inverseDistance",W=None,is_std
 if __name__=="__main__":
     points_file_path=r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\实习四\data\Test4.shp"
     saved_shp_path=None
-    saved_shp_path=r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\temp\实习四\result\grid1000m.shp"
+    #saved_shp_path=r"D:\必须用电脑解决的作业\空间统计分析\Spatial Statistics\temp\实习四\result\grid3000m.shp"
     points=gpd.read_file(points_file_path)
     points.boundary
     print("投影为：",points.crs) # EPSG:4547对应的是CSGS114E
@@ -423,8 +423,8 @@ if __name__=="__main__":
     grid=generateGridAndCountPoints(refrence_gdf_points=points,
                # x_num=40,
                # y_num=40,
-               x_interval=500,
-               y_interval=500,
+               x_interval=1000,
+               y_interval=1000,
                is_plot=True,
                saved_shp_path=saved_shp_path
         )
@@ -433,10 +433,10 @@ if __name__=="__main__":
     grid=GStarLocal(
         gdf_polygons=grid,                  # 要分析的面
         study_attribute="num_pts",          # 要研究的属性，使用本项目生成的格网填"num_pts"
-        mode="contiguityEdgesOnly",             # 空间权重矩阵的计算方式"contiguityEdgesOnly""inverseDistance"
+        mode="fixedDistanceBand",             # 空间权重矩阵的计算方式"contiguityEdgesOnly""inverseDistance"
         distance_threshold=3000,             # 若使用fixedDistanceBand需要填这个
         is_plot=True,                       # 是否绘图
-        saved_shp_path=None,#saved_shp_path,       # 分析结果的保存地址  
+        saved_shp_path=result_saved_path,      # 分析结果的保存地址  
         is_std=False                       # 改变这个不影响结果
 
     )
